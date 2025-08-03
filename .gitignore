@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+*.log
+
+# Virtual environment
+venv/
+env/
+
+# Streamlit cache
+.streamlit/config.toml
+.streamlit/*.json
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Log folders
+logs/*.log
+
+# Exported files
+*.csv
+*.md
+bookmarks.txt
