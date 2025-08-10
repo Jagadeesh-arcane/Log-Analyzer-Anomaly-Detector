@@ -1,0 +1,70 @@
+# .gitlab-ci.yml
+stages:
+  - build
+  - deploy
+  - destroy
+
+variables:
+  IMAGE_TAG: "latest"
+  AWS_REGION: $AWS_REGION
+  ECR_REPOSITORY: $ECR_REPOSITORY
+  PROJECT_DIR: $CI_PROJECT_DIR
+
+before_script:
+  - apk add --no-cache python3 py3-pip curl jq || true
+  - pip3 install --upgrade awscli || true
+
+build_and_push:
+  image: docker:24.0.2
+  stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - echo "Logging into AWS ECR..."
+    - aws --version
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+    - export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+    - export ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+    - export IMAGE_NAME="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+    - docker build -t ${IMAGE_NAME} .
+    - docker push ${IMAGE_NAME}
+  only:
+    - main
+
+terraform_deploy:
+  image: hashicorp/terraform:1.5.0
+  stage: deploy
+  before_script:
+    - apk add --no-cache python3 py3-pip curl bash || true
+    - pip3 install awscli || true
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+  script:
+    - cd terraform
+    - terraform init -input=false
+    - terraform apply -auto-approve -var "aws_region=$AWS_REGION" -var "app_name=$CI_PROJECT_NAME"
+  only:
+    - main
+
+terraform_destroy:
+  image: hashicorp/terraform:1.5.0
+  stage: destroy
+  when: manual       # make this manual/protected to avoid accidental run
+  before_script:
+    - apk add --no-cache python3 py3-pip curl bash || true
+    - pip3 install awscli || true
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+  script:
+    - cd terraform
+    - terraform init -input=false
+    - terraform destroy -auto-approve -var "aws_region=$AWS_REGION" -var "app_name=$CI_PROJECT_NAME"
+  only:
+    - main
