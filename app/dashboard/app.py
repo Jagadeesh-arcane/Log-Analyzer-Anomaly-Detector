@@ -41,7 +41,7 @@ if st_autorefresh:
     st.rerun()
 
 # Select from available files or upload
-log_files = [f for f in os.listdir("logs") if f.endswith(".log")]
+log_files = [f for f in os.listdir("app/logs") if f.endswith(".log")]
 selected_log_file = st.selectbox("📁 Select a log file", log_files)
 uploaded_file = st.file_uploader("Or upload your own .log file", type=["log"])
 
@@ -55,7 +55,7 @@ if uploaded_file is not None:
     logs = parse_log_file(uploaded_file, last_n_lines=tail_count)
     st.success("✅ Uploaded log file loaded.")
 elif selected_log_file:
-    file_path = os.path.join("logs", selected_log_file)
+    file_path = os.path.join("app/logs", selected_log_file)
     logs = parse_log_file(file_path, last_n_lines=tail_count)
     st.success(f"📄 Loaded log file: `{selected_log_file}`")
 else:

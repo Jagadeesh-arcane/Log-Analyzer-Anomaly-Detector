@@ -10,7 +10,7 @@ from utils.notifier import send_email_alert
 
 load_dotenv()
 
-LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "logs/sample.log")
+LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "app/logs/test-1.log")
 RESPONSE_TIME_THRESHOLD = int(os.getenv("RESPONSE_TIME_THRESHOLD", 1000))
 
 def main():
