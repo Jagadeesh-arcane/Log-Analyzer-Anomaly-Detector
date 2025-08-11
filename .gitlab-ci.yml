@@ -62,7 +62,7 @@ build_and_push:
   only:
     - main
 
-terraform_deploy:
+.terraform_deploy:
   stage: deploy
   image: 
     name: hashicorp/terraform:1.5.0
