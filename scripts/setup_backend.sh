@@ -29,13 +29,13 @@ else
 fi
 
 # create dynamodb table if not exists
-if ! aws dynamodb describe-table --table-name "${TABLE_NAME}" 2>/dev/null; then
+if ! aws dynamodb describe-table --table-name "${TABLE_NAME}" --region "${AWS_REGION}" 2>/dev/null; then
   echo "Creating DynamoDB table ${TABLE_NAME}..."
   aws dynamodb create-table \
     --table-name "${TABLE_NAME}" \
     --attribute-definitions AttributeName=LockID,AttributeType=S \
     --key-schema AttributeName=LockID,KeyType=HASH \
-    --billing-mode PAY_PER_REQUEST
+    --billing-mode PAY_PER_REQUEST \
     --region "${AWS_REGION}"
 else
   echo "DynamoDB table ${TABLE_NAME} already exists."
