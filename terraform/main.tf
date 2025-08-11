@@ -111,7 +111,7 @@ resource "aws_instance" "app_instance" {
   vpc_security_group_ids = [aws_security_group.app_sg.id]
   associate_public_ip_address = true
 
-  user_data = templatefile("scripts/user_data.tpl", {
+  user_data = templatefile("${path.module}/../scripts/user_data.tpl", {
     ecr_repo_url = aws_ecr_repository.app_repo.repository_url
     region       = var.aws_region
     port         = var.streamlit_port
