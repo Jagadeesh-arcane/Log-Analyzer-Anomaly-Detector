@@ -4,7 +4,7 @@ variable "aws_region" {
 }
 
 variable "app_name" {
-  default = "log-analyzer"
+  default = "log-analyzer-anomaly-detector-public"
 }
 
 variable "instance_type" {

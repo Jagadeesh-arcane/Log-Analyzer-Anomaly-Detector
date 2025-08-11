@@ -1,27 +1,46 @@
 # .gitlab-ci.yml
 stages:
+  - backend
   - build
   - deploy
   - destroy
 
 variables:
+  TF_STATE_BUCKET: "terraform-state-bucket"  
+  TF_STATE_LOCK_TABLE: "terraform-locks"
+  TF_STATE_KEY: "${CI_PROJECT_NAME}/terraform.tfstate"
   IMAGE_TAG: "latest"
   AWS_REGION: $AWS_REGION
   ECR_REPOSITORY: $ECR_REPOSITORY
   PROJECT_DIR: $CI_PROJECT_DIR
   APP_NAME: $CI_PROJECT_NAME
+  STREAMLIT_PORT: "8501"
 
-before_script:
-  - apk add --no-cache python3 py3-pip curl jq || true
-  - pip3 install --upgrade awscli || true
+# install tools helper image
+.default_before_script: &default_before_script |
+  apk add --no-cache bash curl jq python3 py3-pip unzip git || true
+  pip3 install --upgrade awscli || true
 
-.build_and_push:
-  image: docker:24.0.2
+backend_setup:
+  stage: backend
+  image: amazonlinux:2
+  before_script:
+    - *default_before_script
+  script:
+    - chmod +x scripts/setup_backend.sh
+    - ./scripts/setup_backend.sh
+  rules:
+    - when: manual
+
+build_and_push:
   stage: build
+  image: docker:24.0.2
   services:
     - docker:dind
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - *default_before_script
   script:
     - echo "Logging into AWS ECR..."
     - aws --version
@@ -39,49 +58,28 @@ before_script:
   only:
     - main
 
-.terraform_deploy:
+terraform_deploy:
+  stage: deploy
   image: 
     name: hashicorp/terraform:1.5.0
     entrypoint: [""]
-  stage: deploy
   before_script:
-    - apk add --no-cache python3 py3-pip curl bash || true
-    - pip3 install awscli || true
-    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-    - aws configure set region $AWS_REGION
+    - *default_before_script
   script:
     - cd terraform
-    - terraform init -input=false
-    - terraform apply -auto-approve -var "aws_region=$AWS_REGION" -var "app_name=$CI_PROJECT_NAME"
+    - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
+    - terraform apply -auto-approve -var "aws_region=${AWS_REGION}" -var "app_name=${APP_NAME}" -var "streamlit_port=${STREAMLIT_PORT}"
   only:
     - main
 
 terraform_destroy:
-  image: 
-    name: hashicorp/terraform:1.5.0
-    entrypoint: [""]
   stage: destroy
-  when: manual       # make this manual/protected to avoid accidental run
+  image: amazonlinux:2
   before_script:
-    - apk add --no-cache python3 py3-pip curl bash || true
-    - pip3 install awscli || true
-    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-    - aws configure set region $AWS_REGION
+    - *default_before_script
   script:
-    - cd terraform
-    - terraform init -input=false
-    - terraform destroy -auto-approve -var "aws_region=$AWS_REGION" -var "app_name=$CI_PROJECT_NAME"
-    # Safety cleanup for ECR repos with same app name
-    - echo "Cleaning up any remaining ECR repositories..."
-    - aws ecr describe-repositories --region $AWS_REGION --query "repositories[?starts_with(repositoryName, '$CI_PROJECT_NAME')].repositoryName" --output text | while read repo; do
-        aws ecr delete-repository --repository-name "$repo" --force --region $AWS_REGION || true;
-      done
-    # Safety cleanup for S3 buckets with same app name
-    - echo "Cleaning up any remaining S3 buckets..."
-    - aws s3api list-buckets --query "Buckets[].Name" --output text | grep "$CI_PROJECT_NAME" | while read bucket; do
-        aws s3 rb "s3://$bucket" --force || true;
-      done
+    - chmod +x scripts/destroy_all.sh
+    - ./scripts/destroy_all.sh
+  when: manual  # make this manual/protected to avoid accidental run
   only:
     - main
