@@ -17,13 +17,13 @@ variables:
   STREAMLIT_PORT: "8501"
 
 # Use correct package manager depending on base image
-.default_before_script_al2: &default_before_script_al2 |
-  yum install -y bash curl jq python3 python3-pip unzip git
-  pip3 install --upgrade awscli
+.default_before_script_al2: &default_before_script_al2 
+  - yum install -y bash curl jq python3 python3-pip unzip git
+  - pip3 install --upgrade awscli
 
-.default_before_script_docker: &default_before_script_docker |
-  apk add --no-cache bash curl jq python3 py3-pip unzip git
-  pip3 install --upgrade awscli
+.default_before_script_docker: &default_before_script_docker 
+  - apk add --no-cache bash curl jq python3 py3-pip unzip git
+  - pip3 install --upgrade awscli
 
 backend_setup:
   stage: backend
