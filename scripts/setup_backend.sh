@@ -10,10 +10,17 @@ echo ">>> Backend setup: region=${AWS_REGION}, bucket=${BUCKET_NAME}, table=${TA
 # create bucket if not exists
 if ! aws s3api head-bucket --bucket "${BUCKET_NAME}" 2>/dev/null; then
   echo "Creating S3 bucket ${BUCKET_NAME}..."
-  aws s3api create-bucket \
-    --bucket "${BUCKET_NAME}" \
-    --region "${AWS_REGION}" \
-    --create-bucket-configuration LocationConstraint="${AWS_REGION}"
+  if [ "${AWS_REGION}" = "us-east-1" ]; then
+    aws s3api create-bucket \
+      --bucket "${BUCKET_NAME}" \
+      --region "${AWS_REGION}"
+  else
+    aws s3api create-bucket \
+      --bucket "${BUCKET_NAME}" \
+      --region "${AWS_REGION}" \
+      --create-bucket-configuration LocationConstraint="${AWS_REGION}"
+  fi
+
   aws s3api put-bucket-versioning \
     --bucket "${BUCKET_NAME}" \
     --versioning-configuration Status=Enabled
