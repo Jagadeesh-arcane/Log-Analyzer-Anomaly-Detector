@@ -6,7 +6,7 @@ stages:
   - destroy
 
 variables:
-  TF_STATE_BUCKET: "terraform-state-bucket"  
+  TF_STATE_BUCKET: "terraform-state-bucket-6546768"  
   TF_STATE_LOCK_TABLE: "terraform-locks"
   TF_STATE_KEY: "${CI_PROJECT_NAME}/terraform.tfstate"
   IMAGE_TAG: "latest"
