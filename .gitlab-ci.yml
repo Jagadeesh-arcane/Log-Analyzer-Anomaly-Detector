@@ -39,7 +39,9 @@ build_and_push:
     - main
 
 terraform_deploy:
-  image: hashicorp/terraform:1.5.0
+  image: 
+    name: hashicorp/terraform:1.5.0
+    entrypoint: [""]
   stage: deploy
   before_script:
     - apk add --no-cache python3 py3-pip curl bash || true
