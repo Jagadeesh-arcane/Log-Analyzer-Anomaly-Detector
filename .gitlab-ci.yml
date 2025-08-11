@@ -14,7 +14,7 @@ before_script:
   - apk add --no-cache python3 py3-pip curl jq || true
   - pip3 install --upgrade awscli || true
 
-build_and_push:
+.build_and_push:
   image: docker:24.0.2
   stage: build
   services:
