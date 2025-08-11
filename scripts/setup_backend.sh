@@ -2,7 +2,8 @@
 set -euo pipefail
 
 AWS_REGION="${AWS_REGION:-us-east-1}"
-BUCKET_NAME="${TF_STATE_BUCKET:-terraform-state-bucket-${CI_COMMIT_SHORT_SHA}}"
+SHORT_SHA="${CI_COMMIT_SHORT_SHA:-$(git rev-parse --short HEAD)}"
+BUCKET_NAME="${TF_STATE_BUCKET:-terraform-state-bucket-${SHORT_SHA}}"
 TABLE_NAME="${TF_STATE_LOCK_TABLE:-terraform-locks}"
 
 echo ">>> Backend setup: region=${AWS_REGION}, bucket=${BUCKET_NAME}, table=${TABLE_NAME}"
