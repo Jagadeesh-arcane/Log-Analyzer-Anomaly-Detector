@@ -97,7 +97,7 @@ resource "aws_instance" "app_instance" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
-  subnet_id              = element(data.aws_subnet_ids.default.ids, 0)
+  subnet_id              = element(data.aws_subnets.default.ids, 0)
   vpc_security_group_ids = [aws_security_group.app_sg.id]
   associate_public_ip_address = true
 
