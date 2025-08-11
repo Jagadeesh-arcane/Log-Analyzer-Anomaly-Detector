@@ -17,7 +17,7 @@ AWS_REGION="${region}"
 ECR_URL="${ecr_repo_url}"
 
 # Use aws CLI to get login password and docker login
-$(/usr/local/bin/aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${ecr_repo_url%/*})
+$$(/usr/local/bin/aws ecr get-login-password --region $${region} | docker login --username AWS --password-stdin $${ecr_repo_url%/*})
 
 # Pull latest image and run
 docker pull ${ecr_repo_url}:latest || true
