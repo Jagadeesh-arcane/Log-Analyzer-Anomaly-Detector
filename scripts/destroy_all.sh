@@ -3,7 +3,7 @@ set -euo pipefail
 
 AWS_REGION="${AWS_REGION:-us-east-1}"
 APP_NAME="${APP_NAME:-${CI_PROJECT_NAME:-log-analyzer-anomaly-detector-public}}"
-TF_BACKEND_BUCKET="${TF_STATE_BUCKET:-terraform-state-bucket}"
+TF_BACKEND_BUCKET="${TF_STATE_BUCKET:-terraform-state-bucket-${CI_COMMIT_SHORT_SHA}}"
 TF_BACKEND_KEY="${TF_STATE_KEY:-${APP_NAME}/terraform.tfstate}"
 TF_LOCK_TABLE="${TF_STATE_LOCK_TABLE:-terraform-locks}"
 
