@@ -1,0 +1,8 @@
+2025-08-03 10:00:01 INFO User login successful
+2025-08-03 10:00:05 ERROR Failed to connect to database
+2025-08-03 10:01:00 WARN Memory usage high
+2025-08-03 10:02:00 INFO API response time: 300ms
+2025-08-03 10:02:30 ERROR Failed to fetch resource
+2025-08-03 10:03:00 INFO API response time: 1500ms
+2025-08-03 10:03:30 INFO User logout
+2025-08-03 11:00:00 INFO API response time: 2000ms

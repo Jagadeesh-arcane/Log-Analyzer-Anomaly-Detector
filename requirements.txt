@@ -1,3 +1,12 @@
 streamlit
 pandas
+numpy
+matplotlib
+seaborn
+plotly
 python-dotenv
+scikit-learn
+email-validator
+boto3
+awscli
+terraform-local

@@ -1,15 +1,16 @@
 # Python
 __pycache__/
 *.py[cod]
+*.egg
 *.egg-info/
 .env
-*.log
 
 # Virtual environment
 venv/
 env/
 
 # Streamlit cache
+.streamlit/secrets.toml
 .streamlit/config.toml
 .streamlit/*.json
 
@@ -21,9 +22,19 @@ env/
 Thumbs.db
 
 # Log folders
-logs/*.log
+*.tmp
 
 # Exported files
 *.csv
-*.md
 bookmarks.txt
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+crash.log
+
+# AWS & CI/CD
+.aws/
+.ecr/

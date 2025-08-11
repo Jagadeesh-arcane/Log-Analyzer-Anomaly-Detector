@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# install docker and awscli
+# install docker
 yum update -y
 amazon-linux-extras install docker -y
 service docker start
