@@ -14,6 +14,7 @@ data "aws_subnets" "default" {
 resource "aws_ecr_repository" "app_repo" {
   name                 = var.app_name
   image_tag_mutability = "MUTABLE"
+  force_delete         = true  # This ensures Terraform deletes all images with the repo
 }
 
 # IAM Role and Policy for EC2 to pull from ECR and write logs to S3 (minimal)
@@ -34,6 +35,7 @@ resource "aws_iam_role" "ec2_role" {
 
 resource "aws_iam_policy" "ecr_pull_policy" {
   name = "${var.app_name}-ecr-pull-policy"
+  
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -84,6 +86,14 @@ resource "aws_security_group" "app_sg" {
     cidr_blocks      = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description      = "SSH from anywhere"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -121,14 +131,4 @@ data "aws_ami" "amazon_linux" {
     name   = "name"
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
-}
-
-# Outputs
-output "instance_public_ip" {
-  description = "Public IP of EC2 instance"
-  value       = aws_instance.app_instance.public_ip
-}
-
-output "ecr_repository_url" {
-  value = aws_ecr_repository.app_repo.repository_url
 }

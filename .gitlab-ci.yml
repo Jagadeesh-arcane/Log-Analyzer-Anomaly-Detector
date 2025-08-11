@@ -9,6 +9,7 @@ variables:
   AWS_REGION: $AWS_REGION
   ECR_REPOSITORY: $ECR_REPOSITORY
   PROJECT_DIR: $CI_PROJECT_DIR
+  APP_NAME: $CI_PROJECT_NAME
 
 before_script:
   - apk add --no-cache python3 py3-pip curl jq || true
@@ -38,7 +39,7 @@ before_script:
   only:
     - main
 
-terraform_deploy:
+.terraform_deploy:
   image: 
     name: hashicorp/terraform:1.5.0
     entrypoint: [""]
@@ -72,5 +73,15 @@ terraform_destroy:
     - cd terraform
     - terraform init -input=false
     - terraform destroy -auto-approve -var "aws_region=$AWS_REGION" -var "app_name=$CI_PROJECT_NAME"
+    # Safety cleanup for ECR repos with same app name
+    - echo "Cleaning up any remaining ECR repositories..."
+    - aws ecr describe-repositories --region $AWS_REGION --query "repositories[?starts_with(repositoryName, '$CI_PROJECT_NAME')].repositoryName" --output text | while read repo; do
+        aws ecr delete-repository --repository-name "$repo" --force --region $AWS_REGION || true;
+      done
+    # Safety cleanup for S3 buckets with same app name
+    - echo "Cleaning up any remaining S3 buckets..."
+    - aws s3api list-buckets --query "Buckets[].Name" --output text | grep "$CI_PROJECT_NAME" | while read bucket; do
+        aws s3 rb "s3://$bucket" --force || true;
+      done
   only:
     - main
