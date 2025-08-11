@@ -1,4 +1,3 @@
-```markdown
 # 📊 Log Analyzer & Anomaly Detector
 
 A powerful and user-friendly **Streamlit** web application to analyze server log files, detect anomalies, visualize trends, and generate reports.  
@@ -27,7 +26,6 @@ Designed for **IT infrastructure teams** to monitor backend logs and improve inc
 ## 📁 Project Structure
 
 ```
-
 log-analyzer/
 ├── dashboard/
 │   └── app.py                # Main Streamlit UI
@@ -43,8 +41,7 @@ log-analyzer/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
-
-````
+```
 
 ---
 
@@ -55,7 +52,7 @@ log-analyzer/
 ```bash
 git clone https://github.com/yourusername/log-analyzer.git
 cd log-analyzer
-````
+```
 
 ### 2️⃣ Set Up a Virtual Environment
 
@@ -105,7 +102,7 @@ Then open [http://localhost:8501](http://localhost:8501) in your browser.
 
 ## 🧪 Demo Log File
 
-You can test the app with a sample log file containing 100+ entries across multiple dates.
+You can test the app with a sample log file containing 100+ entries across multiple dates.  
 Place it in the `logs/` folder and select it via the app UI.
 
 ---
@@ -125,7 +122,7 @@ Place it in the `logs/` folder and select it via the app UI.
 
 ## 🙌 Contributing
 
-Contributions are welcome!
+Contributions are welcome!  
 Please open an issue or submit a pull request for new features, bug fixes, or improvements.
 
 ---
@@ -133,8 +130,3 @@ Please open an issue or submit a pull request for new features, bug fixes, or im
 ## 📜 License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
-```
-
-Do you also want me to now give you the **`.gitignore`** and **`requirements.txt`** in the same one-shot format so you can drop them in without any cleanup? That way your repo will be ready for both local and AWS/Terraform deployment.
-```
