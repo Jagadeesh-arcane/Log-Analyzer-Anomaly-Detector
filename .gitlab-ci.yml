@@ -34,13 +34,14 @@ lint:
     - cd $CI_PROJECT_DIR
   script:
     - cd terraform
+    - terraform init -backend=false
     - terraform fmt -check
     - terraform validate
 
 # ---------------------------------------
 # Terraform Backend Initialization
 # ---------------------------------------
-.backend:
+backend:
   stage: backend
   image: python:3.11-slim
   before_script:
@@ -57,6 +58,7 @@ lint:
     - unzip -qo terraform.zip
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
+    - cd $CI_PROJECT_DIR
   script:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
@@ -66,7 +68,7 @@ lint:
 # ---------------------------------------
 # Docker Image Build & Push to ECR
 # ---------------------------------------
-.build-image:
+build-image:
   stage: build-image
   image: docker:24.0.5
   services:
@@ -85,18 +87,20 @@ lint:
     - docker build -t log-analyzer:${IMAGE_TAG} .
     - docker tag log-analyzer:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
     - docker push ${ECR_REPO}:${IMAGE_TAG}
-  rules:
-    - if: $CI_COMMIT_BRANCH
-      changes:
-        - Dockerfile
-        - dashboard/**
-        - src/**
-        - requirements.txt
+  only:
+    - main
+  # rules:
+  #   - if: $CI_COMMIT_BRANCH
+  #     changes:
+  #       - Dockerfile
+  #       - dashboard/**
+  #       - src/**
+  #       - requirements.txt
 
 # ---------------------------------------
 # Terraform Plan
 # ---------------------------------------
-.infra-plan:
+infra-plan:
   stage: infra-plan
   image: python:3.11-slim
   before_script:
@@ -113,6 +117,7 @@ lint:
     - unzip -qo terraform.zip
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
+    - cd $CI_PROJECT_DIR
   script:
     - cd terraform
     - terraform plan -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
@@ -123,7 +128,7 @@ lint:
 # ---------------------------------------
 # Terraform Apply
 # ---------------------------------------
-.infra-apply:
+infra-apply:
   stage: infra-apply
   image: python:3.11-slim
   dependencies:
@@ -142,6 +147,7 @@ lint:
     - unzip -qo terraform.zip
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
+    - cd $CI_PROJECT_DIR
   script:
     - cd terraform
     - terraform apply -auto-approve tfplan
@@ -149,7 +155,7 @@ lint:
 # ---------------------------------------
 # Terraform Destroy
 # ---------------------------------------
-.destroy:
+destroy:
   stage: destroy
   image: python:3.11-slim
   when: manual
@@ -167,6 +173,7 @@ lint:
     - unzip -qo terraform.zip
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
+    - cd $CI_PROJECT_DIR
   script:
     - cd terraform
     - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}"
