@@ -32,6 +32,8 @@ lint:
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
   script:
+    - pwd 
+    - ls -la
     - cd terraform
     - terraform fmt -check
     - terraform validate
@@ -39,7 +41,7 @@ lint:
 # ---------------------------------------
 # Terraform Backend Initialization
 # ---------------------------------------
-backend:
+.backend:
   stage: backend
   image: python:3.11-slim
   before_script:
@@ -65,7 +67,7 @@ backend:
 # ---------------------------------------
 # Docker Image Build & Push to ECR
 # ---------------------------------------
-build-image:
+.build-image:
   stage: build-image
   image: docker:24.0.5
   services:
@@ -95,7 +97,7 @@ build-image:
 # ---------------------------------------
 # Terraform Plan
 # ---------------------------------------
-infra-plan:
+.infra-plan:
   stage: infra-plan
   image: python:3.11-slim
   before_script:
@@ -122,7 +124,7 @@ infra-plan:
 # ---------------------------------------
 # Terraform Apply
 # ---------------------------------------
-infra-apply:
+.infra-apply:
   stage: infra-apply
   image: python:3.11-slim
   dependencies:
@@ -148,7 +150,7 @@ infra-apply:
 # ---------------------------------------
 # Terraform Destroy
 # ---------------------------------------
-destroy:
+.destroy:
   stage: destroy
   image: python:3.11-slim
   when: manual
