@@ -17,7 +17,7 @@ variables:
 
 backend:
   stage: backend
-  image: hashicorp/terraform:1.9.5
+  image: hashicorp/terraform:1.9.5-full
   before_script:
   - apk add --no-cache bash curl unzip python3 py3-pip
   - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -63,7 +63,7 @@ build-image:
 
 infra-plan:
   stage: infra-plan
-  image: hashicorp/terraform:1.9.5
+  image: hashicorp/terraform:1.9.5-full
   before_script:
   - apk add --no-cache bash curl unzip python3 py3-pip
   - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -83,7 +83,7 @@ infra-plan:
 
 infra-apply:
   stage: infra-apply
-  image: hashicorp/terraform:1.9.5
+  image: hashicorp/terraform:1.9.5-full
   before_script:
   - apk add --no-cache bash curl unzip python3 py3-pip
   - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -96,7 +96,7 @@ infra-apply:
 
 destroy:
   stage: destroy
-  image: hashicorp/terraform:1.9.5
+  image: hashicorp/terraform:1.9.5-full
   when: manual
   before_script:
   - apk add --no-cache bash curl unzip python3 py3-pip
