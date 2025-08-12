@@ -26,10 +26,10 @@ module "vpc" {
   enable_dns_support   = true
 }
 
-# resource "aws_ecr_repository" "log_analyzer_repo" {
-#   name                 = "log-analyzer"
-#   image_tag_mutability = "MUTABLE"
-# }
+resource "aws_ecr_repository" "log_analyzer_repo" {
+  name                 = "log-analyzer"
+  image_tag_mutability = "MUTABLE"
+}
 
 resource "aws_security_group" "ecs_sg" {
   name        = "log-analyzer-sg"

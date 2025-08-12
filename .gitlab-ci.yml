@@ -3,9 +3,10 @@
 stages:
   - lint
   - backend
-  - build-image
   - infra-plan
   - infra-apply
+  - build-image
+  - deploy
   - destroy
 
 variables:
@@ -66,36 +67,6 @@ backend:
     - main
 
 # ---------------------------------------
-# Docker Image Build & Push to ECR
-# ---------------------------------------
-build-image:
-  stage: build-image
-  image: docker:24.0.5
-  services:
-    - docker:24.0.5-dind
-  variables:
-    DOCKER_DRIVER: overlay2
-  before_script:
-    - apk add --no-cache python3 py3-pip curl jq
-    - pip install awscli
-    - aws --version
-  script:
-    - export ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer"
-    - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}
-    - docker build -t log-analyzer:${IMAGE_TAG} .
-    - docker tag log-analyzer:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
-    - docker push ${ECR_REPO}:${IMAGE_TAG}
-  only:
-    - main
-  # rules:
-  #   - if: $CI_COMMIT_BRANCH
-  #     changes:
-  #       - Dockerfile
-  #       - dashboard/**
-  #       - src/**
-  #       - requirements.txt
-
-# ---------------------------------------
 # Terraform Plan
 # ---------------------------------------
 infra-plan:
@@ -119,6 +90,8 @@ infra-plan:
   script:
     - cd terraform
     - terraform plan -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
+  only:
+    - main
   artifacts:
     paths:
       - terraform/tfplan
@@ -149,6 +122,62 @@ infra-apply:
   script:
     - cd terraform
     - terraform apply -auto-approve tfplan
+  only:
+    - main
+
+# ---------------------------------------
+# Docker Image Build & Push to ECR
+# ---------------------------------------
+build-image:
+  stage: build-image
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - apk add --no-cache python3 py3-pip curl jq
+    - pip install awscli
+    - aws --version
+  script:
+    - export ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer"
+    - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}
+    - docker build -t log-analyzer:${IMAGE_TAG} .
+    - docker tag log-analyzer:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
+    - docker push ${ECR_REPO}:${IMAGE_TAG}
+  only:
+    - main
+  # rules:
+  #   - if: $CI_COMMIT_BRANCH
+  #     changes:
+  #       - Dockerfile
+  #       - dashboard/**
+  #       - src/**
+  #       - requirements.txt
+
+
+# ---------------------------------------
+# Deploy Application (ECS service update)
+# ---------------------------------------
+deploy:
+  stage: deploy
+  image: python:3.11-slim
+  needs:
+    - build-image
+  before_script:
+    - set -e
+    - apt-get update && apt-get install -y curl unzip groff less git
+    - echo "Installing AWS CLI..."
+    - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip -q awscliv2.zip
+    - ./aws/install
+    - aws --version
+  script:
+    - echo "Starting deployment..."
+    - ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer"
+    - aws ecs update-service --cluster your-cluster-name --service your-service-name --force-new-deployment --region ${AWS_REGION}
+  only:
+    - main
 
 # ---------------------------------------
 # Terraform Destroy
