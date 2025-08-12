@@ -1,50 +1,83 @@
-image: alpine:3.19
+# .gitlab-ci.yml
+image: hashicorp/terraform:1.9.5
 
 stages:
-  - infra-init
-  - build
-  - deploy
+  - backend
+  - build-image
+  - infra-plan
+  - infra-apply
   - destroy
 
 variables:
   TF_STATE_BUCKET: "log-analyzer-tfstate"
-  TF_STATE_KEY: "terraform.tfstate"
+  TF_STATE_LOCK_TABLE: "terraform-locks"
+  TF_STATE_KEY: "${CI_PROJECT_NAME}/terraform.tfstate"
   AWS_REGION: "us-east-1"
-  IMAGE_TAG: "latest"
+  IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+  TF_CLI_ARGS: "-no-color"
 
 before_script:
-  # Install dependencies
-  - apk add --no-cache bash curl jq docker python3 py3-pip git
-  - pip install awscli
-  # Install Terraform
-  - wget https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip
-  - unzip terraform_1.8.5_linux_amd64.zip && mv terraform /usr/local/bin/ && rm terraform_1.8.5_linux_amd64.zip
+  - apk add --no-cache curl unzip bash jq docker python3 py3-pip
+  - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  - unzip awscliv2.zip
+  - ./aws/install
+  - aws --version
   - terraform --version
 
-infra_init:
-  stage: infra-init
+backend:
+  stage: backend
   script:
     - cd terraform
-    - terraform init
-    - terraform plan -out=tfplan
+    - terraform init \
+        -backend-config="bucket=${TF_STATE_BUCKET}" \
+        -backend-config="key=${TF_STATE_KEY}" \
+        -backend-config="region=${AWS_REGION}" \
+        -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
+  only:
+    - main
+
+build-image:
+  stage: build-image
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - apk add --no-cache python3 py3-pip curl jq
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    - unzip awscliv2.zip
+    - ./aws/install
+    - aws --version
+  script:
+    - export ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer"
+    - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+    - docker build -t log-analyzer:${IMAGE_TAG} .
+    - docker tag log-analyzer:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
+    - docker push ${ECR_REPO}:${IMAGE_TAG}
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        - Dockerfile
+        - dashboard/**
+        - src/**
+        - requirements.txt
+
+infra-plan:
+  stage: infra-plan
+  script:
+    - cd terraform
+    - terraform plan -var="aws_region=${AWS_REGION}" \
+                     -var="email_user=${EMAIL_USER}" \
+                     -var="email_password=${EMAIL_PASSWORD}" \
+                     -var="image_tag=${IMAGE_TAG}" \
+                     -out=tfplan
   artifacts:
     paths:
       - terraform/tfplan
 
-build:
-  stage: build
-  services:
-    - docker:dind
-  variables:
-    DOCKER_DRIVER: overlay2
-  script:
-    - $(aws ecr get-login --no-include-email --region $AWS_REGION)
-    - docker build -t log-analyzer .
-    - docker tag log-analyzer:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer:${IMAGE_TAG}
-    - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer:${IMAGE_TAG}
-
-deploy:
-  stage: deploy
+infra-apply:
+  stage: infra-apply
   script:
     - cd terraform
     - terraform apply -auto-approve tfplan
@@ -54,4 +87,7 @@ destroy:
   when: manual
   script:
     - cd terraform
-    - terraform destroy -auto-approve
+    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" \
+                                             -var="email_user=${EMAIL_USER}" \
+                                             -var="email_password=${EMAIL_PASSWORD}" \
+                                             -var="image_tag=${IMAGE_TAG}"

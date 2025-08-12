@@ -1,3 +1,5 @@
+# src/detector.py
+
 def detect_high_response_times(logs, threshold_ms=1000):
     anomalies = []
     for log in logs:

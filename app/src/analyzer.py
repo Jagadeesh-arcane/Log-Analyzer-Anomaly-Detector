@@ -1,3 +1,5 @@
+# src/analyzer.py
+
 from collections import Counter
 
 def get_log_level_counts(logs):
