@@ -33,6 +33,7 @@ bookmarks.txt
 *.tfstate.*
 .terraform/
 terraform.tfvars
+.terraform.lock.hcl
 crash.log
 
 # AWS & CI/CD
