@@ -56,7 +56,7 @@ backend:
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
   script:
-    - terraform -chdir=terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
+    - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
   only:
     - main
 
@@ -111,7 +111,7 @@ infra-plan:
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
   script:
-    - terraform -chdir=terraform plan -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
+    - terraform plan -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
   artifacts:
     paths:
       - terraform/tfplan
@@ -139,7 +139,7 @@ infra-apply:
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
   script:
-    - terraform -chdir=terraform apply -auto-approve tfplan
+    - terraform apply -auto-approve tfplan
 
 # ---------------------------------------
 # Terraform Destroy
@@ -163,4 +163,4 @@ destroy:
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
   script:
-    - terraform -chdir=terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}"
+    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}"
