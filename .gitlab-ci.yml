@@ -25,14 +25,13 @@ lint:
   before_script:
     - set -e
     - apt-get update && apt-get install -y curl unzip git
-    - pwd
-    - ls -la
     - echo "Installing Terraform..."
     - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
     - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
     - unzip -qo terraform.zip
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
+    - cd $CI_PROJECT_DIR
   script:
     - pwd 
     - ls -la
