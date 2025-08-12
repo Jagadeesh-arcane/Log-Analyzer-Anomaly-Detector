@@ -1,0 +1,46 @@
+stages:
+  - infra-init
+  - build
+  - deploy
+  - destroy
+
+variables:
+  TF_STATE_BUCKET: "log-analyzer-tfstate"
+  TF_STATE_KEY: "terraform.tfstate"
+  AWS_REGION: "us-east-1"
+  IMAGE_TAG: "latest"
+
+before_script:
+  - apk add --no-cache python3 py3-pip bash curl jq docker
+  - pip install awscli terraform-local
+
+infra_init:
+  stage: infra-init
+  script:
+    - cd terraform
+    - terraform init
+    - terraform plan -out=tfplan
+  artifacts:
+    paths:
+      - terraform/tfplan
+
+build:
+  stage: build
+  script:
+    - $(aws ecr get-login --no-include-email --region $AWS_REGION)
+    - docker build -t log-analyzer .
+    - docker tag log-analyzer:latest ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer:${IMAGE_TAG}
+    - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer:${IMAGE_TAG}
+
+deploy:
+  stage: deploy
+  script:
+    - cd terraform
+    - terraform apply -auto-approve tfplan
+
+destroy:
+  stage: destroy
+  when: manual
+  script:
+    - cd terraform
+    - terraform destroy -auto-approve
