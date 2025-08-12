@@ -32,7 +32,6 @@ lint:
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
   script:
-    - cd terraform
     - terraform fmt -check
     - terraform validate
 
