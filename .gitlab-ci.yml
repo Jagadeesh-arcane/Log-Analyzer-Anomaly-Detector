@@ -1,3 +1,5 @@
+image: hashicorp/terraform:1.8.5
+
 stages:
   - infra-init
   - build
@@ -11,8 +13,10 @@ variables:
   IMAGE_TAG: "latest"
 
 before_script:
-  - apk add --no-cache python3 py3-pip bash curl jq docker
-  - pip install awscli terraform-local
+  # Install AWS CLI, Docker, Python, jq
+  - apt-get update -y
+  - apt-get install -y python3 python3-pip bash curl jq docker.io
+  - pip3 install awscli terraform-local
 
 infra_init:
   stage: infra-init
