@@ -32,8 +32,6 @@ resource "aws_ecs_task_definition" "log_analyzer_task" {
   }])
 
   execution_role_arn = aws_iam_role.ecs_task_exec_role.arn
-  cpu                = "512"
-  memory             = "1024"
 }
 
 resource "aws_ecs_service" "log_analyzer_service" {
