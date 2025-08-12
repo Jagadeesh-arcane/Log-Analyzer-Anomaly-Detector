@@ -177,7 +177,7 @@ deploy:
   script:
     - echo "Starting deployment..."
     - ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer"
-    - aws ecs update-service --cluster your-cluster-name --service your-service-name --force-new-deployment --region ${AWS_REGION}
+    - aws ecs update-service --cluster log-analyzer-cluster --service log-analyzer-service --force-new-deployment --region ${AWS_REGION}
   only:
     - main
 
