@@ -19,7 +19,7 @@ backend:
   stage: backend
   image: python:3.11-slim
   before_script:
-    - apt-get update && apt-get install -y curl unzip groff less
+    - apt-get update && apt-get install -y curl unzip groff less git
     - echo "Installing AWS CLI..."
     - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip -q awscliv2.zip
@@ -69,7 +69,7 @@ infra-plan:
   stage: infra-plan
   image: python:3.11-slim
   before_script:
-    - apt-get update && apt-get install -y curl unzip groff less
+    - apt-get update && apt-get install -y curl unzip groff less git
     - echo "Installing AWS CLI..."
     - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip -q awscliv2.zip
@@ -93,7 +93,7 @@ infra-apply:
   stage: infra-apply
   image: python:3.11-slim
   before_script:
-    - apt-get update && apt-get install -y curl unzip groff less
+    - apt-get update && apt-get install -y curl unzip groff less git
     - echo "Installing AWS CLI..."
     - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip -q awscliv2.zip
@@ -115,7 +115,7 @@ destroy:
   image: python:3.11-slim
   when: manual
   before_script:
-    - apt-get update && apt-get install -y curl unzip groff less
+    - apt-get update && apt-get install -y curl unzip groff less git
     - echo "Installing AWS CLI..."
     - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip -q awscliv2.zip
