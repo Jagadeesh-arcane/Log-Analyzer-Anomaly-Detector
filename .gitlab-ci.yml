@@ -34,11 +34,7 @@ backend:
     - terraform version
   script:
     - cd terraform
-    - terraform init \
-        -backend-config="bucket=${TF_STATE_BUCKET}" \
-        -backend-config="key=${TF_STATE_KEY}" \
-        -backend-config="region=${AWS_REGION}" \
-        -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
+    - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
   only:
     - main
 
@@ -88,11 +84,7 @@ infra-plan:
     - terraform version
   script:
     - cd terraform
-    - terraform plan -var="aws_region=${AWS_REGION}" \
-                     -var="email_user=${EMAIL_USER}" \
-                     -var="email_password=${EMAIL_PASSWORD}" \
-                     -var="image_tag=${IMAGE_TAG}" \
-                     -out=tfplan
+    - terraform plan -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
   artifacts:
     paths:
       - terraform/tfplan
@@ -138,7 +130,4 @@ destroy:
     - terraform version
   script:
     - cd terraform
-    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" \
-                                             -var="email_user=${EMAIL_USER}" \
-                                             -var="email_password=${EMAIL_PASSWORD}" \
-                                             -var="image_tag=${IMAGE_TAG}"
+    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}"
