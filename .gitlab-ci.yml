@@ -26,9 +26,11 @@ backend:
     - ./aws/install
     - aws --version
     - echo "Installing Terraform..."
+    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
     - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
     - unzip -qo terraform.zip
     - mv terraform /usr/local/bin/
+    - cd -
     - terraform version
   script:
     - cd terraform
@@ -78,9 +80,11 @@ infra-plan:
     - ./aws/install
     - aws --version
     - echo "Installing Terraform..."
+    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
     - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
     - unzip -qo terraform.zip
     - mv terraform /usr/local/bin/
+    - cd -
     - terraform version
   script:
     - cd terraform
@@ -104,9 +108,11 @@ infra-apply:
     - ./aws/install
     - aws --version
     - echo "Installing Terraform..."
+    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
     - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
     - unzip -qo terraform.zip
     - mv terraform /usr/local/bin/
+    - cd -
     - terraform version
   script:
     - cd terraform
@@ -124,9 +130,11 @@ destroy:
     - ./aws/install
     - aws --version
     - echo "Installing Terraform..."
+    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
     - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
     - unzip -qo terraform.zip
     - mv terraform /usr/local/bin/
+    - cd -
     - terraform version
   script:
     - cd terraform
