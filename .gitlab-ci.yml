@@ -1,4 +1,4 @@
-image: hashicorp/terraform:1.8.5
+image: alpine:3.19
 
 stages:
   - infra-init
@@ -13,10 +13,13 @@ variables:
   IMAGE_TAG: "latest"
 
 before_script:
-  # Install AWS CLI, Docker, Python, jq
-  - apt-get update -y
-  - apt-get install -y python3 python3-pip bash curl jq docker.io
-  - pip3 install awscli terraform-local
+  # Install dependencies
+  - apk add --no-cache bash curl jq docker python3 py3-pip git
+  - pip install awscli
+  # Install Terraform
+  - wget https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip
+  - unzip terraform_1.8.5_linux_amd64.zip && mv terraform /usr/local/bin/ && rm terraform_1.8.5_linux_amd64.zip
+  - terraform --version
 
 infra_init:
   stage: infra-init
@@ -30,6 +33,10 @@ infra_init:
 
 build:
   stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
   script:
     - $(aws ecr get-login --no-include-email --region $AWS_REGION)
     - docker build -t log-analyzer .
