@@ -10,8 +10,8 @@ resource "aws_ecs_task_definition" "log_analyzer_task" {
   memory                   = "1024"
 
   container_definitions = jsonencode([{
-    name  = "log-analyzer"
-    image = "${aws_ecr_repository.log_analyzer_repo.repository_url}:${var.image_tag}"
+    name      = "log-analyzer"
+    image     = "${aws_ecr_repository.log_analyzer_repo.repository_url}:${var.image_tag}"
     essential = true
     portMappings = [{
       containerPort = 8501
