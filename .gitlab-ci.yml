@@ -1,5 +1,6 @@
 # .gitlab-ci.yml
-image: hashicorp/terraform:1.9.5
+# image: hashicorp/terraform:1.9.5
+image: alpine:3.20
 
 stages:
   - backend
@@ -11,7 +12,7 @@ stages:
 variables:
   TF_STATE_BUCKET: "log-analyzer-tfstate"
   TF_STATE_LOCK_TABLE: "terraform-locks"
-  TF_STATE_KEY: "${CI_PROJECT_NAME}/terraform.tfstate"
+  TF_STATE_KEY: "log-analyzer/terraform.tfstate"
   AWS_REGION: "us-east-1"
   IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
   TF_CLI_ARGS: "-no-color"
