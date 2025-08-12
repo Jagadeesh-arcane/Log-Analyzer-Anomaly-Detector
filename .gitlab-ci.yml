@@ -32,8 +32,9 @@ lint:
     - mv /tmp/terraform-install/terraform /usr/local/bin/
     - terraform version
   script:
-    - terraform -chdir=terraform fmt -check
-    - terraform -chdir=terraform validate
+    - cd terraform
+    - terraform fmt -check
+    - terraform validate
 
 # ---------------------------------------
 # Terraform Backend Initialization
