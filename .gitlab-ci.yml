@@ -2,6 +2,7 @@
 
 stages:
   - lint
+  - setup
   - backend
   - infra-plan
   - infra-apply
@@ -67,6 +68,34 @@ lint:
     - terraform init -backend=false
     - terraform fmt -check
     - terraform validate
+
+# ---------------------------------------
+# Resource Creation For State Storage 
+# ---------------------------------------
+setup:
+  stage: setup
+  image: amazon/aws-cli:2.15.32  
+  script:
+    - echo "Creating S3 bucket if it doesn't exist..."
+    - |
+      if ! aws s3api head-bucket --bucket "$TF_STATE_BUCKET" 2>/dev/null; then
+        aws s3 mb "s3://$TF_STATE_BUCKET" --region "$AWS_REGION"
+      else
+        echo "Bucket already exists."
+      fi
+
+    - echo "Creating DynamoDB table if it doesn't exist..."
+    - |
+      if ! aws dynamodb describe-table --table-name "$TF_STATE_LOCK_TABLE" --region "$AWS_REGION" 2>/dev/null; then
+        aws dynamodb create-table \
+          --table-name "$TF_STATE_LOCK_TABLE" \
+          --attribute-definitions AttributeName=LockID,AttributeType=S \
+          --key-schema AttributeName=LockID,KeyType=HASH \
+          --billing-mode PAY_PER_REQUEST \
+          --region "$AWS_REGION"
+      else
+        echo "DynamoDB table already exists."
+      fi
 
 # ---------------------------------------
 # Terraform Backend Initialization
@@ -164,6 +193,8 @@ deploy:
     - echo "Starting deployment..."
     - ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${PROJECT_NAME}"
     - aws ecs update-service --cluster ${PROJECT_NAME}-cluster --service ${PROJECT_NAME}-service --force-new-deployment --region ${AWS_REGION}
+    - echo "Fetching web app URL..."
+    - terraform output -raw web_app_url
   only:
     - main
 
@@ -179,3 +210,40 @@ destroy:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
     - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="aws_account_id=${AWS_ACCOUNT_ID}" -var="aws_access_key_id=${AWS_ACCESS_KEY_ID}" -var="aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="email_host=${EMAIL_HOST}" -var="email_port=${EMAIL_PORT}" -var="alert_email_to=${ALERT_EMAIL_TO}" -var="log_file_path=${LOG_FILE_PATH}" -var="sender_name=${SENDER_NAME}" -var="response_time_threshold=${RESPONSE_TIME_THRESHOLD}" -var="streamlit_port=${STREAMLIT_PORT}" -var="image_tag=${IMAGE_TAG}"
+    - echo "Force deleting S3 bucket and all contents..."
+    - |
+      if aws s3api head-bucket --bucket "$TF_STATE_BUCKET" 2>/dev/null; then
+
+        echo "Deleting all object versions (if any)..."
+        VERSIONS=$(aws s3api list-object-versions --bucket "$TF_STATE_BUCKET" --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}' --output=json)
+        if [ "$VERSIONS" != "[]" ]; then
+          echo "$VERSIONS" > delete.json
+          aws s3api delete-objects --bucket "$TF_STATE_BUCKET" --delete file://delete.json
+        fi
+
+        echo "Deleting all delete markers (if any)..."
+        MARKERS=$(aws s3api list-object-versions --bucket "$TF_STATE_BUCKET" --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}' --output=json)
+        if [ "$MARKERS" != "[]" ]; then
+          echo "$MARKERS" > delete-markers.json
+          aws s3api delete-objects --bucket "$TF_STATE_BUCKET" --delete file://delete-markers.json
+        fi
+
+        echo "Deleting remaining objects (if any)..."
+        aws s3 rm "s3://$TF_STATE_BUCKET" --recursive
+
+        echo "Deleting the bucket..."
+        aws s3api delete-bucket --bucket "$TF_STATE_BUCKET" --region "$AWS_REGION"
+
+        echo "S3 bucket deleted successfully."
+      else
+        echo "S3 bucket does not exist or already deleted."
+      fi
+
+    - echo "Deleting DynamoDB table..."
+    - |
+      if aws dynamodb describe-table --table-name "$TF_STATE_LOCK_TABLE" --region "$AWS_REGION" 2>/dev/null; then
+        aws dynamodb delete-table --table-name "$TF_STATE_LOCK_TABLE" --region "$AWS_REGION"
+        echo "DynamoDB table deleted."
+      else
+        echo "DynamoDB table does not exist or already deleted."
+      fi
