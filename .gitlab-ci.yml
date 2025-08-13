@@ -74,7 +74,8 @@ lint:
 # ---------------------------------------
 setup:
   stage: setup
-  image: amazon/aws-cli:2.15.32  
+  image: python:3.11-slim
+  before_script: *default_before_script 
   script:
     - echo "Creating S3 bucket if it doesn't exist..."
     - |
