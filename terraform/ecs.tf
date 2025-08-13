@@ -65,6 +65,8 @@ resource "aws_ecs_service" "log_analyzer_service" {
 
   depends_on = [aws_iam_role_policy_attachment.ecs_task_exec_policy]
 
+  depends_on = [aws_lb_listener.http_listener]
+
   tags = var.tags
 }
 
