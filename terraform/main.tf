@@ -29,6 +29,7 @@ module "vpc" {
 resource "aws_ecr_repository" "log_analyzer_repo" {
   name                 = "log-analyzer"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true 
 }
 
 resource "aws_security_group" "ecs_sg" {

@@ -1,11 +1,21 @@
-# src/analyzer.py
+# app/src/analyzer.py
 
 from collections import Counter
 
 def get_log_level_counts(logs):
-    levels = [log["level"] for log in logs]
-    return dict(Counter(levels))
+    """Count occurrences of each log level."""
+    levels = [log.get("level") for log in logs if log.get("level")]
+    return dict(Counter(levels).most_common())
 
-def get_frequent_errors(logs):
-    errors = [log["message"] for log in logs if log["level"] == "ERROR"]
-    return dict(Counter(errors))
+def get_frequent_errors(logs, min_count=2):
+    """
+    Return frequent error messages with a minimum count.
+    Args:
+        logs (list): List of log dicts.
+        min_count (int): Minimum frequency for an error to be returned.
+    Returns:
+        dict: Error message -> count
+    """
+    errors = [log.get("message") for log in logs if log.get("level") == "ERROR" and log.get("message")]
+    counter = Counter(errors)
+    return {msg: count for msg, count in counter.items() if count >= min_count}

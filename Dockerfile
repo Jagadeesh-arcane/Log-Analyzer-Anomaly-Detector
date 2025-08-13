@@ -14,5 +14,5 @@ COPY . .
 
 EXPOSE 8501
 
-# entry: run streamlit app (path to your entry file; adjust if inside 'dashboard/app.py')
-ENTRYPOINT ["streamlit", "run", "dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# entry: run streamlit app (path to your entry file; adjust if inside 'app/dashboard/app.py')
+ENTRYPOINT ["streamlit", "run", "app/dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]

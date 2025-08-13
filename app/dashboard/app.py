@@ -1,4 +1,4 @@
-# dashboard/app.py
+# app/dashboard/app.py
 
 import streamlit as st
 import os
@@ -62,6 +62,8 @@ elif selected_log_file:
     st.success(f"📄 Loaded log file: `{selected_log_file}`")
 else:
     logs = []
+    st.error(f"❌ Failed to load logs: {e}")
+    st.stop()
 
 
 # Enhanced UI: filters and view modes
@@ -150,9 +152,14 @@ os.makedirs("data", exist_ok=True)
 st.subheader("📌 Bookmark an Error Message")
 bookmark = st.selectbox("Choose an error to bookmark", errors)
 if st.button("🔖 Save Bookmark"):
-    with open(BOOKMARK_FILE, "a") as f:
-        f.write(bookmark + "\n")
-    st.success("Saved to bookmarks.txt")
+    with open(BOOKMARK_FILE, "a+") as f:
+        f.seek(0)
+        existing = f.read().splitlines()
+        if bookmark not in existing:
+            f.write(bookmark + "\n")
+            st.success("Saved to bookmarks.txt")
+        else:
+            st.info("Bookmark already exists.")
 
 # View bookmarks in sidebar
 if os.path.exists(BOOKMARK_FILE):
