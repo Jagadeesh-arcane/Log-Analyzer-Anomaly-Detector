@@ -30,6 +30,21 @@ variables:
   TF_CLI_ARGS: "-no-color"
   IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
 
+.default_before_script: &default_before_script
+  - set -e
+  - apt-get update && apt-get install -y curl unzip groff less git
+  - echo "Installing AWS CLI..."
+  - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  - unzip -q awscliv2.zip
+  - ./aws/install
+  - aws --version
+  - echo "Installing Terraform..."
+  - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
+  - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
+  - unzip -qo terraform.zip
+  - mv /tmp/terraform-install/terraform /usr/local/bin/
+  - terraform version
+  - cd $CI_PROJECT_DIR
 
 # ---------------------------------------
 # Lint / Validate Terraform
@@ -56,24 +71,10 @@ lint:
 # ---------------------------------------
 # Terraform Backend Initialization
 # ---------------------------------------
-backend:
+.backend:
   stage: backend
   image: python:3.11-slim
-  before_script:
-    - set -e
-    - apt-get update && apt-get install -y curl unzip groff less git
-    - echo "Installing AWS CLI..."
-    - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip -q awscliv2.zip
-    - ./aws/install
-    - aws --version
-    - echo "Installing Terraform..."
-    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
-    - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
-    - unzip -qo terraform.zip
-    - mv /tmp/terraform-install/terraform /usr/local/bin/
-    - terraform version
-    - cd $CI_PROJECT_DIR
+  before_script: *default_before_script
   script:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
@@ -86,21 +87,7 @@ backend:
 infra-plan:
   stage: infra-plan
   image: python:3.11-slim
-  before_script:
-    - set -e
-    - apt-get update && apt-get install -y curl unzip groff less git
-    - echo "Installing AWS CLI..."
-    - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip -q awscliv2.zip
-    - ./aws/install
-    - aws --version
-    - echo "Installing Terraform..."
-    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
-    - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
-    - unzip -qo terraform.zip
-    - mv /tmp/terraform-install/terraform /usr/local/bin/
-    - terraform version
-    - cd $CI_PROJECT_DIR
+  before_script: *default_before_script
   script:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
@@ -119,21 +106,7 @@ infra-apply:
   image: python:3.11-slim
   dependencies:
     - infra-plan
-  before_script:
-    - set -e
-    - apt-get update && apt-get install -y curl unzip groff less git
-    - echo "Installing AWS CLI..."
-    - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip -q awscliv2.zip
-    - ./aws/install
-    - aws --version
-    - echo "Installing Terraform..."
-    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
-    - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
-    - unzip -qo terraform.zip
-    - mv /tmp/terraform-install/terraform /usr/local/bin/
-    - terraform version
-    - cd $CI_PROJECT_DIR
+  before_script: *default_before_script
   script:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
@@ -201,22 +174,8 @@ destroy:
   stage: destroy
   image: python:3.11-slim
   when: manual
-  before_script:
-    - set -e
-    - apt-get update && apt-get install -y curl unzip groff less git
-    - echo "Installing AWS CLI..."
-    - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip -q awscliv2.zip
-    - ./aws/install
-    - aws --version
-    - echo "Installing Terraform..."
-    - mkdir -p /tmp/terraform-install && cd /tmp/terraform-install
-    - curl -s -L https://releases.hashicorp.com/terraform/1.9.5/terraform_1.9.5_linux_amd64.zip -o terraform.zip
-    - unzip -qo terraform.zip
-    - mv /tmp/terraform-install/terraform /usr/local/bin/
-    - terraform version
-    - cd $CI_PROJECT_DIR
+  before_script: *default_before_script
   script:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
-    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="aws_account_id=${AWS_ACCOUNT_ID}" -var="aws_access_key_id=${AWS_ACCESS_KEY_ID}" -var="aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="email_host=${EMAIL_HOST}" -var="email_port=${EMAIL_PORT}" -var="alert_email_to=${ALERT_EMAIL_TO}" -var="log_file_path=${LOG_FILE_PATH}" -var="sender_name=${SENDER_NAME}" -var="response_time_threshold=${RESPONSE_TIME_THRESHOLD}" -var="streamlit_port=${STREAMLIT_PORT}" -var="image_tag=${IMAGE_TAG}" "
+    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="aws_account_id=${AWS_ACCOUNT_ID}" -var="aws_access_key_id=${AWS_ACCESS_KEY_ID}" -var="aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="email_host=${EMAIL_HOST}" -var="email_port=${EMAIL_PORT}" -var="alert_email_to=${ALERT_EMAIL_TO}" -var="log_file_path=${LOG_FILE_PATH}" -var="sender_name=${SENDER_NAME}" -var="response_time_threshold=${RESPONSE_TIME_THRESHOLD}" -var="streamlit_port=${STREAMLIT_PORT}" -var="image_tag=${IMAGE_TAG}"

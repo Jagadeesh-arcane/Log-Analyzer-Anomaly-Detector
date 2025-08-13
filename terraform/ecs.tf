@@ -57,6 +57,12 @@ resource "aws_ecs_service" "log_analyzer_service" {
     security_groups  = [aws_security_group.ecs_sg.id]
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app_tg.arn
+    container_name   = "${var.project_name}"
+    container_port   = var.streamlit_port
+  }
+
   depends_on = [aws_iam_role_policy_attachment.ecs_task_exec_policy]
 
   tags = var.tags
