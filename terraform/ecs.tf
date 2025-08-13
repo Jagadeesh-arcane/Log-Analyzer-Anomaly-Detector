@@ -19,15 +19,15 @@ resource "aws_ecs_task_definition" "log_analyzer_task" {
       hostPort      = var.streamlit_port
     }]
     environment = [
-      { name = "EMAIL_USER",               value = var.email_user },
-      { name = "EMAIL_PASSWORD",           value = var.email_password },
-      { name = "EMAIL_HOST",               value = var.email_host },
-      { name = "EMAIL_PORT",               value = tostring(var.email_port) },
-      { name = "ALERT_EMAIL_TO",           value = var.alert_email_to },
-      { name = "LOG_FILE_PATH",            value = var.log_file_path },
-      { name = "SENDER_NAME",              value = var.sender_name },
-      { name = "RESPONSE_TIME_THRESHOLD",  value = tostring(var.response_time_threshold) },
-      { name = "STREAMLIT_PORT",           value = tostring(var.streamlit_port) }
+      { name = "EMAIL_USER", value = var.email_user },
+      { name = "EMAIL_PASSWORD", value = var.email_password },
+      { name = "EMAIL_HOST", value = var.email_host },
+      { name = "EMAIL_PORT", value = tostring(var.email_port) },
+      { name = "ALERT_EMAIL_TO", value = var.alert_email_to },
+      { name = "LOG_FILE_PATH", value = var.log_file_path },
+      { name = "SENDER_NAME", value = var.sender_name },
+      { name = "RESPONSE_TIME_THRESHOLD", value = tostring(var.response_time_threshold) },
+      { name = "STREAMLIT_PORT", value = tostring(var.streamlit_port) }
     ]
     logConfiguration = {
       logDriver = "awslogs"
@@ -65,5 +65,5 @@ resource "aws_ecs_service" "log_analyzer_service" {
 resource "aws_cloudwatch_log_group" "ecs" {
   name              = "/ecs/${var.project_name}"
   retention_in_days = 7
-  tags = var.tags
+  tags              = var.tags
 }
