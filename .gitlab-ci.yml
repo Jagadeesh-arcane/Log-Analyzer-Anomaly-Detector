@@ -10,12 +10,26 @@ stages:
   - destroy
 
 variables:
-  TF_STATE_BUCKET: "log-analyzer-tfstate"
-  TF_STATE_LOCK_TABLE: "terraform-locks"
-  TF_STATE_KEY: "log-analyzer/terraform.tfstate"
-  AWS_REGION: "us-east-1"
-  IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+  ALERT_EMAIL_TO: "${ALERT_EMAIL_TO}"
+  AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+  AWS_ACCOUNT_ID: "${AWS_ACCOUNT_ID}"
+  AWS_REGION: "${AWS_REGION}"
+  AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+  EMAIL_HOST: "${EMAIL_HOST}"
+  EMAIL_PASSWORD: "${EMAIL_PASSWORD}"
+  EMAIL_PORT: "${EMAIL_PORT}"
+  EMAIL_USER: "${EMAIL_USER}"
+  LOG_FILE_PATH: "${LOG_FILE_PATH}"
+  PROJECT_NAME: "${PROJECT_NAME}"
+  RESPONSE_TIME_THRESHOLD: "${RESPONSE_TIME_THRESHOLD}"
+  SENDER_NAME: "${SENDER_NAME}"
+  STREAMLIT_PORT: "${STREAMLIT_PORT}"
+  TF_STATE_BUCKET: "${TF_STATE_BUCKET}"
+  TF_STATE_KEY: "${TF_STATE_KEY}"
+  TF_STATE_LOCK_TABLE: "${TF_STATE_LOCK_TABLE}"
   TF_CLI_ARGS: "-no-color"
+  IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+
 
 # ---------------------------------------
 # Lint / Validate Terraform
@@ -90,7 +104,7 @@ infra-plan:
   script:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
-    - terraform plan -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
+    - terraform plan -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="email_host=${EMAIL_HOST}" -var="email_port=${EMAIL_PORT}" -var="alert_email_to=${ALERT_EMAIL_TO}" -var="log_file_path=${LOG_FILE_PATH}" -var="sender_name=${SENDER_NAME}" -var="response_time_threshold=${RESPONSE_TIME_THRESHOLD}" -var="streamlit_port=${STREAMLIT_PORT}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
   only:
     - main
   artifacts:
@@ -142,10 +156,10 @@ build-image:
     - pip install awscli
     - aws --version
   script:
-    - export ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer"
+    - export ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${PROJECT_NAME}"
     - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}
-    - docker build -t log-analyzer:${IMAGE_TAG} .
-    - docker tag log-analyzer:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
+    - docker build -t ${PROJECT_NAME}:${IMAGE_TAG} .
+    - docker tag ${PROJECT_NAME}:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
     - docker push ${ECR_REPO}:${IMAGE_TAG}
   only:
     - main
@@ -156,7 +170,6 @@ build-image:
   #       - dashboard/**
   #       - src/**
   #       - requirements.txt
-
 
 # ---------------------------------------
 # Deploy Application (ECS service update)
@@ -176,8 +189,8 @@ deploy:
     - aws --version
   script:
     - echo "Starting deployment..."
-    - ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/log-analyzer"
-    - aws ecs update-service --cluster log-analyzer-cluster --service log-analyzer-service --force-new-deployment --region ${AWS_REGION}
+    - ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${PROJECT_NAME}"
+    - aws ecs update-service --cluster ${PROJECT_NAME}-cluster --service ${PROJECT_NAME}-service --force-new-deployment --region ${AWS_REGION}
   only:
     - main
 
@@ -206,4 +219,4 @@ destroy:
   script:
     - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
-    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="image_tag=${IMAGE_TAG}"
+    - terraform destroy -auto-approve -var="aws_region=${AWS_REGION}" -var="email_user=${EMAIL_USER}" -var="email_password=${EMAIL_PASSWORD}" -var="email_host=${EMAIL_HOST}" -var="email_port=${EMAIL_PORT}" -var="alert_email_to=${ALERT_EMAIL_TO}" -var="log_file_path=${LOG_FILE_PATH}" -var="sender_name=${SENDER_NAME}" -var="response_time_threshold=${RESPONSE_TIME_THRESHOLD}" -var="streamlit_port=${STREAMLIT_PORT}" -var="image_tag=${IMAGE_TAG}" "

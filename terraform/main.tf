@@ -16,7 +16,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
 
-  name = "log-analyzer-vpc"
+  name = "${var.project_name}-vpc"
   cidr = "10.0.0.0/16"
 
   azs            = ["${var.aws_region}a", "${var.aws_region}b"]
@@ -24,16 +24,19 @@ module "vpc" {
 
   enable_dns_hostnames = true
   enable_dns_support   = true
+
+  tags = var.tags
 }
 
 resource "aws_ecr_repository" "log_analyzer_repo" {
-  name                 = "log-analyzer"
+  name                 = "${var.project_name}-repo"
   image_tag_mutability = "MUTABLE"
   force_delete         = true 
+  tags = var.tags
 }
 
 resource "aws_security_group" "ecs_sg" {
-  name        = "log-analyzer-sg"
+  name        = "${var.project_name}-sg"
   description = "Allow HTTP inbound traffic"
   vpc_id      = module.vpc.vpc_id
 
@@ -52,4 +55,6 @@ resource "aws_security_group" "ecs_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = var.tags
 }

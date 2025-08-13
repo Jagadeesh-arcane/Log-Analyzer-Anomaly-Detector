@@ -11,13 +11,17 @@ resource "aws_iam_role" "ecs_task_exec_role" {
       }
     }]
   })
+
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_exec_policy" {
   role       = aws_iam_role.ecs_task_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  tags = var.tags
 }
 
 resource "random_id" "suffix" {
   byte_length = 4
+  tags = var.tags
 }
