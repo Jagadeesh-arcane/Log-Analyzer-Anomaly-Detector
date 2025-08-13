@@ -62,4 +62,6 @@ resource "aws_lb_listener" "http_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app_tg.arn
   }
+
+  depends_on = [aws_ecs_service.log_analyzer_service]
 }
