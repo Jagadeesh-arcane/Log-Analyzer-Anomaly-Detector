@@ -62,7 +62,7 @@ elif selected_log_file:
     st.success(f"📄 Loaded log file: `{selected_log_file}`")
 else:
     logs = []
-    st.error(f"❌ Failed to load logs: {e}")
+    st.error(f"❌ Failed to load logs.")
     st.stop()
 
 
