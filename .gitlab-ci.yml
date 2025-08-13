@@ -47,6 +47,7 @@ variables:
   - terraform version
   - cd $CI_PROJECT_DIR
 
+
 # ---------------------------------------
 # Lint / Validate Terraform
 # ---------------------------------------
@@ -182,19 +183,13 @@ deploy:
   image: python:3.11-slim
   needs:
     - build-image
-  before_script:
-    - set -e
-    - apt-get update && apt-get install -y curl unzip groff less git
-    - echo "Installing AWS CLI..."
-    - curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip -q awscliv2.zip
-    - ./aws/install
-    - aws --version
+  before_script: *default_before_script
   script:
     - echo "Starting deployment..."
     - ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${PROJECT_NAME}"
     - aws ecs update-service --cluster ${PROJECT_NAME}-cluster --service ${PROJECT_NAME}-service --force-new-deployment --region ${AWS_REGION}
     - echo "Fetching web app URL..."
+    - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
     - terraform output -raw web_app_url
   only:
     - main
