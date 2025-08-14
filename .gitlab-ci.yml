@@ -189,6 +189,7 @@ deploy:
     - ECR_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${PROJECT_NAME}"
     - aws ecs update-service --cluster ${PROJECT_NAME}-cluster --service ${PROJECT_NAME}-service --force-new-deployment --region ${AWS_REGION}
     - echo "Fetching web app URL..."
+    - cd terraform
     - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${TF_STATE_LOCK_TABLE}"
     - terraform output -raw web_app_url
   only:
@@ -211,17 +212,21 @@ destroy:
       if aws s3api head-bucket --bucket "${TF_STATE_BUCKET}" 2>/dev/null; then
 
         echo "Deleting all object versions (if any)..."
-        VERSIONS=$(aws s3api list-object-versions --bucket "${TF_STATE_BUCKET}" --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}' --output=json)
-        if [ "$VERSIONS" != "[]" ]; then
-          echo "$VERSIONS" > delete.json
+        VERSIONS=$(aws s3api list-object-versions --bucket "${TF_STATE_BUCKET}" --query='Versions[].{Key:Key,VersionId:VersionId}' --output=json)
+        if [ "$(echo "$VERSIONS" | jq length)" -gt 0 ]; then
+          echo "{\"Objects\": $VERSIONS}" > delete.json
           aws s3api delete-objects --bucket "${TF_STATE_BUCKET}" --delete file://delete.json
+        else
+          echo "No object versions found."
         fi
 
         echo "Deleting all delete markers (if any)..."
-        MARKERS=$(aws s3api list-object-versions --bucket "${TF_STATE_BUCKET}" --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}' --output=json)
-        if [ "$MARKERS" != "[]" ]; then
-          echo "$MARKERS" > delete-markers.json
+        MARKERS=$(aws s3api list-object-versions --bucket "${TF_STATE_BUCKET}" --query='DeleteMarkers[].{Key:Key,VersionId:VersionId}' --output=json)
+        if [ "$(echo "$MARKERS" | jq length)" -gt 0 ]; then
+          echo "{\"Objects\": $MARKERS}" > delete-markers.json
           aws s3api delete-objects --bucket "${TF_STATE_BUCKET}" --delete file://delete-markers.json
+        else
+          echo "No delete markers found."
         fi
 
         echo "Deleting remaining objects (if any)..."
