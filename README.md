@@ -1,6 +1,4 @@
 
----
-
 # 📊 Log Analyzer & Anomaly Detector — Fully Automated AWS Deployment 🚀
 
 A powerful, fully automated **Streamlit** web application for analyzing server logs, detecting anomalies, visualizing trends, and generating reports.
