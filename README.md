@@ -1,4 +1,3 @@
-Here’s your **updated README** to reflect the fully automated, robust GitLab CI/CD pipeline with AWS infrastructure creation and destruction support:
 
 ---
 
@@ -159,5 +158,3 @@ Fork the repo, create a feature branch, and submit a PR.
 MIT License — see the [LICENSE](LICENSE) file.
 
 ---
-
-I can also **add a deployment diagram** showing how GitLab → AWS → ECS is connected, so the README becomes visually clear for new contributors. Would you like me to do that next?
