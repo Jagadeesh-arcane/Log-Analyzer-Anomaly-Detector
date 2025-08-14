@@ -1,25 +1,31 @@
-# 📊 Log Analyzer & Anomaly Detector
+Here’s your **updated README** to reflect the fully automated, robust GitLab CI/CD pipeline with AWS infrastructure creation and destruction support:
 
-A powerful and user-friendly **Streamlit** web application to analyze server log files, detect anomalies, visualize trends, and generate reports.  
-Designed for **IT infrastructure teams** to monitor backend logs and improve incident response time.
+---
+
+# 📊 Log Analyzer & Anomaly Detector — Fully Automated AWS Deployment 🚀
+
+A powerful, fully automated **Streamlit** web application for analyzing server logs, detecting anomalies, visualizing trends, and generating reports.
+Now equipped with a **GitLab CI/CD pipeline** that **provisions all required AWS resources**, deploys the app to ECS, and **completely destroys infrastructure** when no longer needed.
 
 ---
 
 ## 🧰 Features
 
-- 📂 Upload `.log` files or select from saved logs
-- 📈 API response time trends
-- 🟡 Real-time log tailing with auto-refresh
-- 🧮 Log level breakdown (INFO, WARN, ERROR)
-- 🔍 Search & filter logs by level, time, keyword
-- 🐞 View most frequent error messages
-- 🚨 Anomaly detection (e.g., API latency > 1000ms)
-- 📩 Email alerts on anomaly detection
-- 🔖 Bookmark important logs
-- ⬇️ Download filtered logs as CSV
-- 📝 Generate Markdown summary reports
-- 🌙 Dark mode ready
-- 📡 Deployable via Streamlit Cloud, AWS, or local server
+* 📂 Upload `.log` files or select from saved logs
+* 📈 API response time trends
+* 🟡 Real-time log tailing with auto-refresh
+* 🧮 Log level breakdown (INFO, WARN, ERROR)
+* 🔍 Search & filter logs by level, time, keyword
+* 🐞 View most frequent error messages
+* 🚨 Anomaly detection (e.g., API latency > threshold)
+* 📩 Email alerts on anomaly detection
+* 🔖 Bookmark important logs
+* ⬇️ Download filtered logs as CSV
+* 📝 Generate Markdown summary reports
+* 🌙 Dark mode ready
+* ⚙️ **Fully automated AWS deployment with Terraform**
+* 🗑 **One-click infrastructure destroy** (S3, DynamoDB, ECS, etc.)
+* 🐳 Automated Docker image build & push to AWS ECR
 
 ---
 
@@ -37,6 +43,7 @@ log-analyzer/
 │   └── utils/
 │       └── notifier.py       # Email alert logic
 ├── terraform/                # IaC for AWS deployment
+├── .gitlab-ci.yml            # Automated pipeline for build, deploy, destroy
 ├── .env                      # Secure credentials
 ├── requirements.txt
 ├── .gitignore
@@ -74,7 +81,7 @@ pip install -r requirements.txt
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the root folder with your configuration:
+Create a `.env` file in the root folder with:
 
 ```
 EMAIL_USER=your_email@gmail.com
@@ -85,48 +92,72 @@ SENDER_NAME=Log Analyzer
 AWS_ACCESS_KEY_ID=your_aws_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret
 AWS_REGION=us-east-1
-ECR_REPOSITORY=your-ecr-repo-name
+PROJECT_NAME=log-analyzer
+TF_STATE_BUCKET=your-tf-state-bucket
+TF_STATE_KEY=terraform.tfstate
+TF_STATE_LOCK_TABLE=terraform-lock-table
+STREAMLIT_PORT=8501
 ```
 
 ---
 
-## 🚀 Running the Application Locally
+## 🚀 Running Locally
 
 ```bash
 streamlit run dashboard/app.py
 ```
 
-Then open [http://localhost:8501](http://localhost:8501) in your browser.
+Then visit:
+[http://localhost:8501](http://localhost:8501)
 
 ---
 
-## 🧪 Demo Log File
+## ⚡ Automated AWS Deployment via GitLab CI/CD
 
-You can test the app with a sample log file containing 100+ entries across multiple dates.  
-Place it in the `logs/` folder and select it via the app UI.
+This project’s `.gitlab-ci.yml` automates **the entire infrastructure lifecycle**:
+
+1. **Lint** — Validates Terraform code.
+2. **Setup** — Creates S3 bucket (for state) and DynamoDB table (for locking).
+3. **Backend Init** — Configures Terraform backend.
+4. **Infra Plan** — Generates Terraform plan with all variables.
+5. **Infra Apply** — Provisions ECS, ECR, ALB, IAM, and networking.
+6. **Build Image** — Builds Docker image and pushes to AWS ECR.
+7. **Deploy** — Updates ECS service with the new image.
+8. **Destroy** *(manual)* — Destroys all AWS resources, including:
+
+   * ECS Service & Cluster
+   * ECR Repository Images
+   * S3 Bucket & Object Versions
+   * DynamoDB Lock Table
+   * Networking Components (VPC, Subnets, etc.)
+
+**Triggering Deploy:**
+
+* Push to the `main` branch to deploy automatically.
+
+**Triggering Destroy:**
+
+* Manually run the `destroy` job from GitLab’s CI/CD pipeline UI.
 
 ---
 
-## 📦 Deployment
+## 🧪 Testing
 
-### Streamlit Cloud
-
-1. Push your code to GitHub or GitLab.
-2. Link your repo in [Streamlit Community Cloud](https://streamlit.io/cloud).
-
-### AWS Free Tier (via GitLab CI/CD + Terraform)
-
-* Uses `.gitlab-ci.yml` to build a Docker image, push to AWS ECR, and deploy infrastructure via Terraform.
+You can use the provided `sample.log` file in `logs/` to simulate real data.
 
 ---
 
 ## 🙌 Contributing
 
-Contributions are welcome!  
-Please open an issue or submit a pull request for new features, bug fixes, or improvements.
+Contributions are welcome!
+Fork the repo, create a feature branch, and submit a PR.
 
 ---
 
 ## 📜 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+MIT License — see the [LICENSE](LICENSE) file.
+
+---
+
+I can also **add a deployment diagram** showing how GitLab → AWS → ECS is connected, so the README becomes visually clear for new contributors. Would you like me to do that next?
